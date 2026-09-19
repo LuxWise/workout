@@ -219,33 +219,19 @@ export default function BitacoraDeHierro() {
               Resumen
             </div>
             <h2 className={`${display} font-semibold text-[clamp(22px,4.5vw,26px)] mt-1.5`}>
-              Por qué este diseño
+              Empecemos
             </h2>
 
             <div className="flex flex-col gap-3.5 mt-4">
-              <div className={`${cardCls} p-5 flex flex-col gap-1.5`}>
+                <div className={`${cardCls} p-5 flex flex-col gap-1.5`}>
                 <span className={`${mono} text-[12px] uppercase tracking-[0.07em] text-[#6E6A63] dark:text-[#9A948A]`}>
-                  Objetivo
+                  Primeros 2 meses — fase de adaptación (RPE 6–7, 1 serie menos en cada ejercicio principal)
                 </span>
-                Recomposición corporal: ganar masa muscular y reducir el % de grasa que
-                subió en los últimos meses, sin perseguir un número menor en la báscula.
-                El peso puede mantenerse igual o incluso subir un poco mientras el cuerpo
-                cambia de composición.
+                  Esta fase esta propuesta para los primeros 2 meses, para que tus articulaciones y tendones se adapten a la carga de trabajo. No es flojera: tu fuerza volverá rápido, pero tus articulaciones llevan 2 años sin esta carga. Esto evita lesiones y dolor muscular incapacitante en la primera semana.
               </div>
-              <div className={`${cardCls} p-5 flex flex-col gap-1.5`}>
-                <span className={`${mono} text-[12px] uppercase tracking-[0.07em] text-[#6E6A63] dark:text-[#9A948A]`}>
-                  Tu punto de partida
-                </span>
-                2 años sin entrenar de forma seria + 5 meses de actividad esporádica. El
-                cuerpo responde rápido al estímulo nuevo (&quot;ganancias de
-                principiante&quot;), pero las articulaciones y tendones necesitan
-                readaptarse antes de cargar fuerte — por eso hay una fase de adaptación
-                (ver{" "}
-                <a href="#reglas" className="text-[#C6491F] dark:text-[#E47C4C]">
-                  Reglas
-                </a>
-                ).
-              </div>
+            </div>
+
+            <div className="flex flex-col gap-3.5 mt-4">
               <div className={`${cardCls} p-5 flex flex-col gap-1.5`}>
                 <span className={`${mono} text-[12px] uppercase tracking-[0.07em] text-[#6E6A63] dark:text-[#9A948A]`}>
                   Calentamiento (antes de cada sesión, ~8–10 min)
