@@ -6,7 +6,7 @@ export function Tag({ label, color }: { label: string; color: "ember" | "moss" |
     };
     const cls = styles[color];
     return (
-        <span className={`font-sans inline-block text-[13px] uppercase tracking-[0.06em] font-semibold rounded-full px-2.5 py-0.75 ${cls}`}>
+        <span className={`font-sans inline-block text-[11.5px] sm:text-[13px] uppercase tracking-[0.06em] font-semibold rounded-full px-2.5 py-0.75 ${cls}`}>
             {label}
         </span>
     );
