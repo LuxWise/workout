@@ -1,30 +1,31 @@
 export const week = [
     {
         day: "Domingo",
+        slot: "Tarde", 
+        session: "Torso B", 
+        tag: "Espalda/Brazos", 
+        color: "moss" as const 
+    },
+    { 
+        day: "Lunes", 
         slot: "Mañana",
         session: "Pierna A",
         tag: "Cuádriceps",
         color: "ember" as const
     },
-    { day: "Lunes", 
+    { 
+        day: "Martes", 
         slot: "Mañana", 
         session: "Movilidad", 
         tag: "Movilidad", 
         color: "sky" as const 
     },
     { 
-        day: "Martes", 
+        day: "Miércoles", 
         slot: "Mañana", 
         session: "Torso A", 
         tag: "Pecho/Hombro", 
         color: "moss" as const 
-    },
-    { 
-        day: "Miércoles", 
-        slot: "Mañana", 
-        session: "Pierna B", 
-        tag: "Cadera/Posterior", 
-        color: "ember" as const 
     },
     { 
         day: "Jueves", 
@@ -42,9 +43,9 @@ export const week = [
     },
     { 
         day: "Sábado", 
-        slot: "Tarde", 
-        session: "Torso B", 
-        tag: "Espalda/Brazos", 
-        color: "moss" as const 
+        slot: "Mañana", 
+        session: "Pierna B", 
+        tag: "Cadera/Posterior", 
+        color: "ember" as const 
     },
 ];

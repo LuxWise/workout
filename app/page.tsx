@@ -6,13 +6,30 @@ import { legA, legB } from "./config/routine/legs";
 import { torsoA, torsoB } from "./config/routine/torso";
 import { opcional } from "./config/routine/optional";
 
+const short = (day: string) => day.slice(0, 3);
+const joinEs = (xs: string[]) =>
+  xs.length > 1 ? `${xs.slice(0, -1).join(", ")} y ${xs[xs.length - 1]}` : xs.join("");
+
+const strengthSections = {
+  "Pierna A": { id: "pierna-a", tagLabel: "Cuádriceps + core", tagColor: "ember", rows: legA },
+  "Torso A": { id: "torso-a", tagLabel: "Empuje + tracción", tagColor: "moss", rows: torsoA },
+  "Pierna B": { id: "pierna-b", tagLabel: "Cadera/Posterior + core", tagColor: "ember", rows: legB },
+  "Torso B": { id: "torso-b", tagLabel: "Espalda + brazos", tagColor: "moss", rows: torsoB },
+} as const;
+
+type StrengthName = keyof typeof strengthSections;
+const strengthWeek = week.filter((w): w is typeof w & { session: StrengthName } => w.session in strengthSections);
+const strengthDays = joinEs(strengthWeek.map((w) => w.day));
+const mobilityDays = joinEs(week.filter((w) => w.session === "Movilidad").map((w) => short(w.day)));
+const poolDays = joinEs(week.filter((w) => w.session === "Piscina").map((w) => w.day));
+
 const rules: { k: string; v: ReactNode }[] = [
   { k: "Intensidad (RPE)", v: <>Sem 3+: ejercicio principal (el primero del día) a <b>RPE 7–9</b>, accesorios a <b>RPE 8–9</b>. Nunca al fallo total en sentadilla, peso muerto o press: deja siempre 1–2 reps en reserva.</> },
   { k: "Sobrecarga", v: <>Cuando completes todas las series en el tope del rango de reps con buena técnica durante 2 sesiones seguidas, sube el peso: <b>+2.5 kg</b> en tren superior, <b>+5 kg</b> en tren inferior. Sube <b>una variable a la vez</b> (peso o reps), no ambas.</> },
   { k: "Descansos", v: "Respeta el tiempo de descanso de la tabla. Acortarlo para “terminar antes” baja el rendimiento en las series siguientes y el estímulo real. Con 60–90 min por sesión alcanza sin apuro." },
   { k: "Técnica primero", v: "Si la técnica se rompe (espalda redondeada, rodillas hacia adentro, rebote en la barra), baja el peso. Filma una serie de vez en cuando para revisarla. Un ejercicio nuevo se aprende con cargas ligeras." },
   { k: "Deload", v: "Cada 5–6 semanas, una semana con 40% menos volumen y peso más liviano. No es un día perdido: es lo que te permite seguir subiendo carga sin acumular fatiga ni molestias en rodillas u hombros." },
-  { k: "Mínimo viable", v: "Tus 4 sesiones de fuerza son Domingo, Martes, Miércoles y Sábado. Si una semana no te alcanza, prioriza Pierna A, Torso A y Pierna B; Movilidad y natación suman, pero no son obligatorias." },
+  { k: "Mínimo viable", v: `Tus ${strengthWeek.length} sesiones de fuerza son ${strengthDays}. Si una semana no te alcanza, prioriza Pierna A, Torso A y Pierna B; Movilidad y natación suman, pero no son obligatorias.` },
 ];
 
 const limits = [
@@ -57,10 +74,11 @@ export default function BitacoraDeHierro() {
             className="flex flex-wrap gap-2 pt-2.5 pb-5 border-b border-[#D8E2E6] dark:border-[#2C373D] mb-6 sticky top-[env(safe-area-inset-top,0px)] bg-[#F4F7F8] dark:bg-[#12181B] z-10"
           >
             <a href="#resumen" className={chipCls}>Resumen</a>
-            <a href="#pierna-a" className={chipCls}>Dom · Pierna A</a>
-            <a href="#torso-a" className={chipCls}>Mar · Torso A</a>
-            <a href="#pierna-b" className={chipCls}>Mié · Pierna B</a>
-            <a href="#torso-b" className={chipCls}>Sáb · Torso B</a>
+            {strengthWeek.map((w) => (
+              <a key={w.day} href={`#${strengthSections[w.session].id}`} className={chipCls}>
+                {short(w.day)} · {w.session}
+              </a>
+            ))}
             <a href="#opcional" className={chipCls}>Opcional</a>
             <a href="#movilidad-natacion" className={chipCls}>Movilidad y natación</a>
             <a href="#reglas" className={chipCls}>Reglas</a>
@@ -137,16 +155,18 @@ export default function BitacoraDeHierro() {
               </table>
             </div>
             <p className="text-[13.5px] sm:text-[15px] text-[#55656D] dark:text-[#A3B1B8] mt-2.5">
-              Con Lun/Mar/Mié + Sábado ya tienes las 4 sesiones que necesitas para
-              progresar de verdad. El domingo es un extra: si aparece, mejor; si no, es
-              descanso y no rompe nada.
+              Con {strengthDays} ya tienes las {strengthWeek.length} sesiones de fuerza
+              que necesitas para progresar de verdad. Movilidad y natación suman, pero
+              no rompen nada si se saltan.
             </p>
           </section>
 
-          <DaySection id="pierna-a" title="Pierna A" tagLabel="Cuádriceps + core" tagColor="ember" rows={legA} />
-          <DaySection id="torso-a" title="Torso A" tagLabel="Empuje + tracción" tagColor="moss" rows={torsoA} />
-          <DaySection id="pierna-b" title="Pierna B" tagLabel="Cadera/Posterior + core" tagColor="ember" rows={legB} />
-          <DaySection id="torso-b" title="Torso B" tagLabel="Espalda + brazos" tagColor="moss" rows={torsoB} />
+          {strengthWeek.map((w) => {
+            const sec = strengthSections[w.session];
+            return (
+              <DaySection key={sec.id} id={sec.id} title={w.session} tagLabel={sec.tagLabel} tagColor={sec.tagColor} rows={sec.rows} />
+            );
+          })}
           <DaySection
             id="opcional"
             title="Opcional"
@@ -170,7 +190,7 @@ export default function BitacoraDeHierro() {
             </p>
             <div className="grid gap-4 sm:grid-rows-2 mt-4">
               <div className={`${cardCls} p-4 sm:p-5`}>
-                <h3 className={`${display} font-semibold text-lg sm:text-xl`}><Tag label="Movilidad" color="sky" /> <span className="ml-1">Lun y Jue</span></h3>
+                <h3 className={`${display} font-semibold text-lg sm:text-xl`}><Tag label="Movilidad" color="sky" /> <span className="ml-1">{mobilityDays}</span></h3>
                 <p className="mt-2 text-[14.5px] sm:text-[16px]">
                   Movimiento consciente y suave: caminar, trotar muy ligero o hacer ejercicios de movilidad. Es recuperación activa, no un entrenamiento.
                 </p>
@@ -183,7 +203,7 @@ export default function BitacoraDeHierro() {
                 </ul>
               </div>
               <div className={`${cardCls} p-4 sm:p-5`}>
-                <h3 className={`${display} font-semibold text-lg sm:text-xl`}><Tag label="Natación" color="sky" /> <span className="ml-1">Viernes</span></h3>
+                <h3 className={`${display} font-semibold text-lg sm:text-xl`}><Tag label="Natación" color="sky" /> <span className="ml-1">{poolDays}</span></h3>
                 <p className="mt-2 text-[14.5px] sm:text-[16px]">
                   Una hora de piscina para mejorar el cardio y variar la rutina. Al ser de bajo impacto, descansa rodillas y espalda.
                 </p>
