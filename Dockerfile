@@ -1,26 +1,28 @@
-FROM node:24-alpine3.22 AS build
+FROM ghcr.io/pnpm/pnpm:12 AS base
 
+RUN pnpm runtime set node 24 -g
+
+COPY . /app
 WORKDIR /app
 
-COPY package.json package*.json  ./
+FROM base AS prod-deps
 
-RUN npm ci
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
+    pnpm install --store-dir /var/cache/pnpm --prod --frozen-lockfile
 
-COPY . .
+FROM base AS build
 
-RUN npm run build
-RUN npm prune --omit=dev
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
+    pnpm install --store-dir /var/cache/pnpm --frozen-lockfile
+RUN pnpm run build
 
-FROM node:24-alpine3.22 AS prod
+FROM base AS prod
 
-WORKDIR /app
-ENV NODE_ENV=production
-
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["pnpm", "run", "start"]

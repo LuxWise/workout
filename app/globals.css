@@ -5,7 +5,53 @@
   --foreground: #171717;
 }
 
+/* CMS (/admin): mismos tonos que la página pública */
+:root {
+  --a-bg: #F4F7F8;
+  --a-surface: #FFFFFF;
+  --a-well: #EAF0F2;
+  --a-line: #D8E2E6;
+  --a-ink: #1C2A30;
+  --a-muted: #55656D;
+  --a-accent: #BF4A2A;
+  --a-accent-soft: #FBE6DD;
+  --a-on-accent: #FFFFFF;
+  --a-danger: #B3261E;
+  --a-danger-soft: #FCE8E6;
+  --a-ok: #1F7A6B;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --a-bg: #12181B;
+    --a-surface: #1B2327;
+    --a-well: #161E22;
+    --a-line: #2C373D;
+    --a-ink: #E8EEF0;
+    --a-muted: #A3B1B8;
+    --a-accent: #F0906A;
+    --a-accent-soft: #3A2A24;
+    --a-on-accent: #12181B;
+    --a-danger: #FF9C94;
+    --a-danger-soft: #3D2523;
+    --a-ok: #6FCDB9;
+  }
+}
+
 @theme inline {
+  --color-a-bg: var(--a-bg);
+  --color-a-surface: var(--a-surface);
+  --color-a-well: var(--a-well);
+  --color-a-line: var(--a-line);
+  --color-a-ink: var(--a-ink);
+  --color-a-muted: var(--a-muted);
+  --color-a-accent: var(--a-accent);
+  --color-a-accent-soft: var(--a-accent-soft);
+  --color-a-on-accent: var(--a-on-accent);
+  --color-a-danger: var(--a-danger);
+  --color-a-danger-soft: var(--a-danger-soft);
+  --color-a-ok: var(--a-ok);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
@@ -23,4 +69,30 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+
+/* Superficies del navegador, tematizadas para el CMS */
+.admin {
+  accent-color: var(--a-accent);
+  caret-color: var(--a-accent);
+  scrollbar-color: var(--a-line) transparent;
+}
+.admin ::selection {
+  background: var(--a-accent);
+  color: var(--a-on-accent);
+}
+.admin :focus-visible {
+  outline: 2px solid var(--a-accent);
+  outline-offset: 2px;
+}
+.admin input,
+.admin textarea,
+.admin select {
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin * {
+    transition-duration: 0.01ms !important;
+  }
 }

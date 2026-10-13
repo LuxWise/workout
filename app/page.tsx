@@ -1,46 +1,12 @@
 import { DaySection } from "@/components/day-section";
 import { Tag } from "@/components/tag";
-import type { ReactNode } from "react";
-import { week } from "./config/week";
-import { legA, legB } from "./config/routine/legs";
-import { torsoA, torsoB } from "./config/routine/torso";
-import { opcional } from "./config/routine/optional";
+import { getProgram } from "@/lib/routines";
+import type { WeekEntry } from "@/lib/types";
+import { RichText, fillTokens } from "@/components/rich-text";
 
 const short = (day: string) => day.slice(0, 3);
 const joinEs = (xs: string[]) =>
   xs.length > 1 ? `${xs.slice(0, -1).join(", ")} y ${xs[xs.length - 1]}` : xs.join("");
-
-const strengthSections = {
-  "Pierna A": { id: "pierna-a", tagLabel: "Cuádriceps + core", tagColor: "ember", rows: legA },
-  "Torso A": { id: "torso-a", tagLabel: "Empuje + tracción", tagColor: "moss", rows: torsoA },
-  "Pierna B": { id: "pierna-b", tagLabel: "Cadera/Posterior + core", tagColor: "ember", rows: legB },
-  "Torso B": { id: "torso-b", tagLabel: "Espalda + brazos", tagColor: "moss", rows: torsoB },
-} as const;
-
-type StrengthName = keyof typeof strengthSections;
-const strengthWeek = week.filter((w): w is typeof w & { session: StrengthName } => w.session in strengthSections);
-const strengthDays = joinEs(strengthWeek.map((w) => w.day));
-const mobilityDays = joinEs(week.filter((w) => w.session === "Movilidad").map((w) => short(w.day)));
-const poolDays = joinEs(week.filter((w) => w.session === "Piscina").map((w) => w.day));
-
-const rules: { k: string; v: ReactNode }[] = [
-  { k: "Intensidad (RPE)", v: <>Sem 3+: ejercicio principal (el primero del día) a <b>RPE 7–9</b>, accesorios a <b>RPE 8–9</b>. Nunca al fallo total en sentadilla, peso muerto o press: deja siempre 1–2 reps en reserva.</> },
-  { k: "Sobrecarga", v: <>Cuando completes todas las series en el tope del rango de reps con buena técnica durante 2 sesiones seguidas, sube el peso: <b>+2.5 kg</b> en tren superior, <b>+5 kg</b> en tren inferior. Sube <b>una variable a la vez</b> (peso o reps), no ambas.</> },
-  { k: "Descansos", v: "Respeta el tiempo de descanso de la tabla. Acortarlo para “terminar antes” baja el rendimiento en las series siguientes y el estímulo real. Con 60–90 min por sesión alcanza sin apuro." },
-  { k: "Técnica primero", v: "Si la técnica se rompe (espalda redondeada, rodillas hacia adentro, rebote en la barra), baja el peso. Filma una serie de vez en cuando para revisarla. Un ejercicio nuevo se aprende con cargas ligeras." },
-  { k: "Deload", v: "Cada 5–6 semanas, una semana con 40% menos volumen y peso más liviano. No es un día perdido: es lo que te permite seguir subiendo carga sin acumular fatiga ni molestias en rodillas u hombros." },
-  { k: "Mínimo viable", v: `Tus ${strengthWeek.length} sesiones de fuerza son ${strengthDays}. Si una semana no te alcanza, prioriza Pierna A, Torso A y Pierna B; Movilidad y natación suman, pero no son obligatorias.` },
-];
-
-const limits = [
-  "Dolor punzante, articular o que se agudiza durante la serie: detén el ejercicio y cámbialo por una variante sin dolor. La molestia muscular (agujetas) es normal; el dolor de articulación o tendón no.",
-  "Dolor que persiste más de 1 semana, hormigueo, mareo o falta de aire anormal: consulta a un profesional de la salud antes de seguir cargando.",
-  "Deja al menos 48 h entre dos sesiones que trabajen el mismo grupo muscular. El programa ya está ordenado para respetarlo.",
-  "No entrenes fuerza con fiebre, enfermedad o menos de 5 h de sueño; ese día camina o descansa. Perder una sesión cuesta menos que una lesión.",
-  "Máximo 90 min de sesión de fuerza. Más tiempo no da más músculo, solo más fatiga.",
-  "No añadas series “extra” ni sesiones por tu cuenta: más volumen no es mejor si no alcanzas a recuperarte.",
-  "Calienta siempre (ver Resumen) y toma agua durante la sesión; evita entrenar fuerte justo después de comer.",
-];
 
 const mono = "font-sans";
 const display = "font-display";
@@ -49,7 +15,21 @@ const cardCls =
 const chipCls =
   `${mono} text-[14.5px] sm:text-[16px] no-underline text-[#1C2A30] dark:text-[#E8EEF0] bg-white dark:bg-[#1B2327] border border-[#D8E2E6] dark:border-[#2C373D] rounded-full px-3.5 py-1.5 whitespace-nowrap hover:border-[#BF4A2A] hover:text-[#BF4A2A] dark:hover:border-[#F0906A] dark:hover:text-[#F0906A]`;
 
-export default function BitacoraDeHierro() {
+export default async function BitacoraDeHierro() {
+  const { routines, week, content } = await getProgram();
+  const strengthWeek = week
+    .filter((w: WeekEntry) => w.routineDoc.kind === "strength")
+    .filter((w, i, all) => all.findIndex((x) => x.routine === w.routine) === i);
+  const strengthDays = joinEs(strengthWeek.map((w) => w.day));
+  const mobilityDays = joinEs(week.filter((w) => w.routine === "mobility").map((w) => short(w.day)));
+  const poolDays = joinEs(week.filter((w) => w.routine === "pool").map((w) => w.day));
+  const fill = (t: string) => fillTokens(t, strengthDays, strengthWeek.length);
+  const activeCards = [
+    { key: "mobility", label: "Movilidad", color: "sky" as const, days: mobilityDays, card: content.active.mobility },
+    { key: "pool", label: "Natación", color: "sky" as const, days: poolDays, card: content.active.pool },
+  ];
+  const optionalRoutines = routines.filter((r) => r.kind === "optional");
+
   return (
     <>
 
@@ -57,15 +37,13 @@ export default function BitacoraDeHierro() {
         <div className="max-w-190 mx-auto px-4 sm:px-5 pt-6 sm:pt-7 pb-15">
           <header className="mb-5">
             <div className={`${mono} text-[11.5px] sm:text-[13px] uppercase tracking-[0.09em] text-[#BF4A2A] dark:text-[#F0906A] font-semibold`}>
-              Programa de recomposición · 4–5 sesiones / semana
+              {content.header.eyebrow}
             </div>
             <h1 className={`${display} font-semibold text-[clamp(26px,6vw,38px)] tracking-[0.01em] [text:balance] mt-1`}>
-              Bitácora de Hierro
+              {content.header.title}
             </h1>
             <p className="mt-2 text-[#55656D] dark:text-[#A3B1B8] max-w-[60ch]">
-              Torso/Pierna a doble frecuencia, pensado para tu calendario real: trabajo,
-              universidad y sesiones de 60–90 min. El objetivo no es la báscula — es
-              convertir el peso ganado en músculo.
+              {content.header.intro}
             </p>
           </header>
 
@@ -75,11 +53,13 @@ export default function BitacoraDeHierro() {
           >
             <a href="#resumen" className={chipCls}>Resumen</a>
             {strengthWeek.map((w) => (
-              <a key={w.day} href={`#${strengthSections[w.session].id}`} className={chipCls}>
-                {short(w.day)} · {w.session}
+              <a key={w.day} href={`#${w.routineDoc.slug}`} className={chipCls}>
+                {short(w.day)} · {w.routineDoc.name}
               </a>
             ))}
-            <a href="#opcional" className={chipCls}>Opcional</a>
+            {optionalRoutines.map((r) => (
+              <a key={r.key} href={`#${r.slug}`} className={chipCls}>{r.name}</a>
+            ))}
             <a href="#movilidad-natacion" className={chipCls}>Movilidad y natación</a>
             <a href="#reglas" className={chipCls}>Reglas</a>
           </nav>
@@ -95,21 +75,21 @@ export default function BitacoraDeHierro() {
             <div className="flex flex-col gap-3.5 mt-4">
               <div className={`${cardCls} p-4 sm:p-5 flex flex-col gap-1.5`}>
                 <span className={`${mono} text-[11.5px] sm:text-[13px] uppercase tracking-[0.07em] text-[#55656D] dark:text-[#A3B1B8]`}>
-                  Primeros 2 meses — fase de adaptación (RPE 6–7, 1 serie menos en cada ejercicio principal)
+                  {content.adaptation.label}
                 </span>
-                Esta fase esta propuesta para los primeros 2 meses, para que tus articulaciones y tendones se adapten a la carga de trabajo. No es flojera: tu fuerza volverá rápido, pero tus articulaciones llevan 2 años sin esta carga. Esto evita lesiones y dolor muscular incapacitante en la primera semana.
+                {content.adaptation.body}
               </div>
             </div>
 
             <div className="flex flex-col gap-3.5 mt-4">
               <div className={`${cardCls} p-4 sm:p-5 flex flex-col gap-1.5`}>
                 <span className={`${mono} text-[11.5px] sm:text-[13px] uppercase tracking-[0.07em] text-[#55656D] dark:text-[#A3B1B8]`}>
-                  Calentamiento (antes de cada sesión, ~15 min)
+                  {content.warmup.label}
                 </span>
                 <ol className="list-decimal pl-5 mt-1 space-y-2 text-[14.5px] sm:text-[16px]">
-                  <li><b>1 km de cardio suave</b> (trote o caminata rápida): ritmo en el que puedas hablar, ~8–10 min.</li>
-                  <li><b>Movilidad de todo el cuerpo</b> (~5 min): cuello y hombros, columna (gato-vaca), cadera, rodillas y tobillos, 8–10 repeticiones lentas por movimiento.</li>
-                  <li><b>Series de aproximación</b> del primer ejercicio: 40% → 60% → 80% del peso de trabajo.</li>
+                  {content.warmup.steps.map((step, i) => (
+                    <li key={i}><RichText text={step} /></li>
+                  ))}
                 </ol>
               </div>
             </div>
@@ -144,10 +124,10 @@ export default function BitacoraDeHierro() {
                         className={`px-2.5 py-2.5 align-top ${i < week.length - 1 ? "border-b border-[#D8E2E6] dark:border-[#2C373D]" : ""} ${row.tag ? "" : "italic text-[#55656D] dark:text-[#A3B1B8]"
                           }`}
                       >
-                        {row.session}
+                        {row.routineDoc.name}
                       </td>
                       <td className={`px-2.5 py-2.5 align-top ${i < week.length - 1 ? "border-b border-[#D8E2E6] dark:border-[#2C373D]" : ""}`}>
-                        {row.tag ? <Tag label={row.tag} color={row.color as 'ember' | 'moss' | 'sky'} /> : "—"}
+                        {row.tag ? <Tag label={row.tag} color={row.color} /> : "—"}
                       </td>
                     </tr>
                   ))}
@@ -155,28 +135,29 @@ export default function BitacoraDeHierro() {
               </table>
             </div>
             <p className="text-[13.5px] sm:text-[15px] text-[#55656D] dark:text-[#A3B1B8] mt-2.5">
-              Con {strengthDays} ya tienes las {strengthWeek.length} sesiones de fuerza
-              que necesitas para progresar de verdad. Movilidad y natación suman, pero
-              no rompen nada si se saltan.
+              {fill(content.weekNote)}
             </p>
           </section>
 
           {strengthWeek.map((w) => {
-            const sec = strengthSections[w.session];
+            const r = w.routineDoc;
             return (
-              <DaySection key={sec.id} id={sec.id} title={w.session} tagLabel={sec.tagLabel} tagColor={sec.tagColor} rows={sec.rows} />
+              <DaySection key={r.key} id={r.slug} title={r.name} tagLabel={r.tagLabel} tagColor={r.tagColor} rows={r.exercises} />
             );
           })}
-          <DaySection
-            id="opcional"
-            title="Opcional"
-            tagLabel="Full body ligero + cardio"
-            tagColor="moss"
-            intro={`Este día no suma estrés articular fuerte — es para moverte, trabajar puntos débiles y mejorar tu base cardiovascular, clave para que el "cambio de grasa a músculo" se vea más rápido.`}
-            rows={opcional}
-            nameHeader="Bloque"
-            repsHeader="Tiempo"
-          />
+          {optionalRoutines.map((r) => (
+            <DaySection
+              key={r.key}
+              id={r.slug}
+              title={r.name}
+              tagLabel={r.tagLabel}
+              tagColor={r.tagColor}
+              intro={r.intro}
+              rows={r.exercises}
+              nameHeader={r.nameHeader}
+              repsHeader={r.repsHeader}
+            />
+          ))}
 
           <section id="movilidad-natacion" className="mb-10 scroll-mt-18">
             <div className={`${mono} text-[11.5px] sm:text-[13px] uppercase tracking-[0.09em] text-[#BF4A2A] dark:text-[#F0906A] font-semibold`}>
@@ -186,35 +167,20 @@ export default function BitacoraDeHierro() {
               Movilidad y natación
             </h2>
             <p className="mt-2 text-[#55656D] dark:text-[#A3B1B8]">
-              Son los días “activos”: no buscan cansarte, buscan que no te quedes quieto mientras tu cuerpo se recupera de las pesas.
+              {content.active.intro}
             </p>
             <div className="grid gap-4 sm:grid-rows-2 mt-4">
-              <div className={`${cardCls} p-4 sm:p-5`}>
-                <h3 className={`${display} font-semibold text-lg sm:text-xl`}><Tag label="Movilidad" color="sky" /> <span className="ml-1">{mobilityDays}</span></h3>
-                <p className="mt-2 text-[14.5px] sm:text-[16px]">
-                  Movimiento consciente y suave: caminar, trotar muy ligero o hacer ejercicios de movilidad. Es recuperación activa, no un entrenamiento.
-                </p>
-                <ul className="mt-3 list-disc pl-5 space-y-1.5 text-[14.5px] sm:text-[16px]">
-                  <li><b>Duración:</b> 30–45 min.</li>
-                  <li><b>Intensidad:</b> puedes hablar con normalidad todo el rato (RPE 3–4, ritmo conversacional).</li>
-                  <li><b>Opciones:</b> caminata rápida, trote suave, movilidad de cadera, hombros y columna.</li>
-                  <li><b>Para qué:</b> mejora la circulación, reduce la rigidez de las sesiones de fuerza y suma gasto calórico sin fatigar.</li>
-                  <li><b>Evita:</b> convertirlo en un entrenamiento duro; si terminas agotado, fue demasiado.</li>
-                </ul>
-              </div>
-              <div className={`${cardCls} p-4 sm:p-5`}>
-                <h3 className={`${display} font-semibold text-lg sm:text-xl`}><Tag label="Natación" color="sky" /> <span className="ml-1">{poolDays}</span></h3>
-                <p className="mt-2 text-[14.5px] sm:text-[16px]">
-                  Una hora de piscina para mejorar el cardio y variar la rutina. Al ser de bajo impacto, descansa rodillas y espalda.
-                </p>
-                <ul className="mt-3 list-disc pl-5 space-y-1.5 text-[14.5px] sm:text-[16px]">
-                  <li><b>Duración:</b> ~60 min, incluyendo pausas.</li>
-                  <li><b>Intensidad:</b> moderada (RPE 5–6): nado continuo con descansos de 20–30 s cuando lo necesites.</li>
-                  <li><b>Estructura sugerida:</b> 5–10 min suave, 40 min de largos alternando estilos, 5–10 min suelto.</li>
-                  <li><b>Para qué:</b> capacidad cardiovascular, movilidad de hombros y recuperación de las piernas.</li>
-                  <li><b>Ojo:</b> si el hombro molesta tras Torso A, nada más suave o prioriza patada y crol relajado.</li>
-                </ul>
-              </div>
+              {activeCards.map((c) => (
+                <div key={c.key} className={`${cardCls} p-4 sm:p-5`}>
+                  <h3 className={`${display} font-semibold text-lg sm:text-xl`}><Tag label={c.label} color={c.color} /> <span className="ml-1">{c.days}</span></h3>
+                  <p className="mt-2 text-[14.5px] sm:text-[16px]">{c.card.body}</p>
+                  <ul className="mt-3 list-disc pl-5 space-y-1.5 text-[14.5px] sm:text-[16px]">
+                    {c.card.bullets.map((b, i) => (
+                      <li key={i}><b>{b.k}:</b> <RichText text={b.v} /></li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -227,47 +193,40 @@ export default function BitacoraDeHierro() {
             </h2>
 
             <div className="bg-[#FBE6DD] dark:bg-[#3A2A24] border border-[#BF4A2A]/35 dark:border-[#F0906A]/35 rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 my-5 text-[14.5px] sm:text-[16px]">
-              <strong className="text-[#BF4A2A] dark:text-[#F0906A]">Primeros 2 meses — fase de adaptación.</strong>{" "}
-              Quita 1 serie de cada ejercicio principal y entrena a RPE 6–7 (dejando 3–4
-              reps &quot;en el tanque&quot;). Tus tendones y articulaciones necesitan más
-              tiempo que tu fuerza para readaptarse; esto evita lesiones y dolor muscular
-              incapacitante.
+              <strong className="text-[#BF4A2A] dark:text-[#F0906A]">{content.rules.adaptationTitle}</strong>{" "}
+              {content.rules.adaptationBody}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {rules.map((r) => (
+              {content.rules.items.map((r) => (
                 <div key={r.k} className={`${cardCls} p-4 sm:p-5`}>
                   <div className={`${mono} text-[11.5px] sm:text-[13px] uppercase tracking-[0.07em] text-[#BF4A2A] dark:text-[#F0906A] font-semibold`}>
                     {r.k}
                   </div>
-                  <div className="text-[14.5px] sm:text-[16px] mt-1.5 [&_b]:text-[#1C2A30] dark:[&_b]:text-[#E8EEF0]">{r.v}</div>
+                  <div className="text-[14.5px] sm:text-[16px] mt-1.5 [&_b]:text-[#1C2A30] dark:[&_b]:text-[#E8EEF0]"><RichText text={fill(r.v)} /></div>
                 </div>
               ))}
             </div>
 
             <div className={`${cardCls} p-4 sm:p-5 mt-4 border-[#BF4A2A]/40 dark:border-[#F0906A]/40`}>
-              <h3 className={`${display} font-semibold text-lg sm:text-xl`}>Límites y precauciones</h3>
+              <h3 className={`${display} font-semibold text-lg sm:text-xl`}>{content.rules.limitsTitle}</h3>
               <ul className="mt-3 list-disc pl-5 space-y-2 text-[14.5px] sm:text-[16px]">
-                {limits.map((l) => (
-                  <li key={l}>{l}</li>
+                {content.rules.limits.map((l, i) => (
+                  <li key={i}>{l}</li>
                 ))}
               </ul>
             </div>
 
             <div className="bg-[#DDF0EB] dark:bg-[#1F3733] border border-[#1F7A6B]/35 dark:border-[#6FCDB9]/35 rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 my-5 text-[14.5px] sm:text-[16px]">
               <strong className="text-[#1F7A6B] dark:text-[#6FCDB9]">
-                La recomposición se gana también fuera del gimnasio.
+                {content.rules.nutritionTitle}
               </strong>{" "}
-              Proteína ≈ 1.8–2.2 g/kg/día (unos 155–190 g repartidos en 3–4 comidas),
-              calorías en mantenimiento o con déficit leve — nunca agresivo, porque un
-              déficit grande frena la ganancia muscular — y 7–8 h de sueño, que es donde
-              realmente se recupera el tejido.
+              {content.rules.nutritionBody}
             </div>
           </section>
 
           <footer className="mt-2.5 text-[#55656D] dark:text-[#A3B1B8] text-[11.5px] sm:text-[13px] border-t border-[#D8E2E6] dark:border-[#2C373D] pt-4">
-            Bitácora de Hierro — revisa cada 5–6 semanas y ajusta pesos y reps según tu
-            progreso real, no según el plan en papel.
+            {content.footer}
           </footer>
         </div>
       </div>
