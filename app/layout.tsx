@@ -8,6 +8,11 @@ const oswald = Oswald({ variable: "--font-oswald", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Bitácora de Hierro",
   description: "Programa de recomposición corporal",
+  icons: {
+    icon: { url: "/logo.webp", type: "image/webp" },
+    shortcut: "/logo.webp",
+    apple: "/logo.webp",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
